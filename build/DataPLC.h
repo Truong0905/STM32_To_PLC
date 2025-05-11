@@ -112,35 +112,62 @@
 #define M2_7 M[2][7]
 
 
+// Define AIW
+#define AIW0 AI[0][2]
+#define AIW1 AI[1][2]
+#define AIW2 AI[2][2]
+#define AIW3 AI[3][2]
+#define AIW4 AI[4][2]
+#define AIW5 AI[5][2]
+#define AIW6 AI[6][2]
+#define AIW7 AI[7][2]
+
+
+// Define AIW
+#define u16VWW0 u16VW[0][2]
+#define u16VWW1 u16VW[1][2]
+#define u16VWW2 u16VW[2][2]
+#define u16VWW3 u16VW[3][2]
+#define u16VWW4 u16VW[4][2]
+#define u16VWW5 u16VW[5][2]
+#define u16VWW6 u16VW[6][2]
+#define u16VWW7 u16VW[7][2]
+
+
+// Define AIW
+#define u32VDW0 u32VD[0][2]
+#define u32VDW1 u32VD[1][2]
+#define u32VDW2 u32VD[2][2]
+#define u32VDW3 u32VD[3][2]
+#define u32VDW4 u32VD[4][2]
+#define u32VDW5 u32VD[5][2]
+#define u32VDW6 u32VD[6][2]
+#define u32VDW7 u32VD[7][2]
+
+
+// Define AIW
+#define f32VDW0 f32VD[0][2]
+#define f32VDW1 f32VD[1][2]
+#define f32VDW2 f32VD[2][2]
+#define f32VDW3 f32VD[3][2]
+#define f32VDW4 f32VD[4][2]
+#define f32VDW5 f32VD[5][2]
+#define f32VDW6 f32VD[6][2]
+#define f32VDW7 f32VD[7][2]
+
+
 // Define Input Pin
-#define I0_0_PIN GPIO_PIN_
-#define I0_1_PIN GPIO_PIN_
-#define I0_2_PIN GPIO_PIN_
-#define I0_3_PIN GPIO_PIN_
-#define I0_4_PIN GPIO_PIN_
-#define I0_5_PIN GPIO_PIN_
-#define I1_0_PIN GPIO_PIN_
-#define I1_1_PIN GPIO_PIN_
 
 
 // Define Input Port
-#define I0_0_PORT GPIO
-#define I0_1_PORT GPIO
-#define I0_2_PORT GPIO
-#define I0_3_PORT GPIO
-#define I0_4_PORT GPIO
-#define I0_5_PORT GPIO
-#define I1_0_PORT GPIO
-#define I1_1_PORT GPIO
 
 
 // Define Output pin
-#define Q0_0_PIN GPIO_PIN_
 
 
 // Define Output Port
-#define Q0_0_PORT GPIO
 
+extern volatile uint16_t AI[3];
 void read_Pin_Input(void);
 void write_Pin_Output(void);
 void Main_task(void *param) ;

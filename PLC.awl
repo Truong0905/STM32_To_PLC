@@ -1,33 +1,34 @@
 ORGANIZATION_BLOCK MAIN:OB1
 TITLE=PROGRAM COMMENTS
 BEGIN
-Network 1 // Network Title
-// Network Comment
-LD     I0.0
-A      I0.1
-NOT
-LD     I0.3
-A      I0.2
-OLD
-A      I0.4
-LD     I0.5
-CTU    C1, 5
+Network 1 //  Network Title
+//  Network Comment
+LD     M0.0
+MOVW   AIW0, VW1
+AENO
+=      M0.1
 Network 2 
-LD     I1.0
-A      I1.1
-O      Q0.0
-AN     M0.0
-=      Q0.0
+LD     M0.0
+ITD    VW1, VD1
+Network 3
+LD     M0.0
+DTR    VD1, VD1
+Network 4 
+LD     M0.0
+/R     32000.0, VD1
+Network 5
+LD     M0.0
+*R     100.0, VD1
 END_ORGANIZATION_BLOCK
 SUBROUTINE_BLOCK SBR_0:SBR0
 TITLE=SUBROUTINE COMMENTS
 BEGIN
-Network 1 // Network Title
-// Network Comment
+Network 1 //  Network Title
+//  Network Comment
 END_SUBROUTINE_BLOCK
 INTERRUPT_BLOCK INT_0:INT0
 TITLE=INTERRUPT ROUTINE COMMENTS
 BEGIN
-Network 1 // Network Title
-// Network Comment
+Network 1 //  Network Title
+//  Network Comment
 END_INTERRUPT_BLOCK

@@ -1,7 +1,6 @@
 #include "hashtable.h"
 #include "STL.h"
 
-
 int main(void)
 {
 
@@ -31,6 +30,8 @@ int main(void)
     STL_InsertListToFileData();
 
     STL_AddTimerFuntion();
+
+    STL_AddReadWriteFunction();
 
     // 4. Tạo file DataPLC.h
     STL_FileDefineData();

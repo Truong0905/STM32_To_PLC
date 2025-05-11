@@ -22,5 +22,6 @@ void STL_InsertListToFileData(void);
 void STL_FileDefineData(void);
 void STL_FileData(void);
 void STL_AddTimerFuntion(void);
+void STL_AddReadWriteFunction(void);
 
 #endif /*__STL_H__*/

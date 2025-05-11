@@ -16,16 +16,28 @@
 #define MOVW_CHECK 1
 #define MOVDW_CHECK 2
 
+#define CONVERT_INT_TO_DINT 0
+#define CONVERT_DINT_TO_REAL 1
+
+
+#define CAL_DIV 0
+#define CAL_MUL 1
+
 //------------------------------------------------- define memory region --------------------------------------------
 // Lựa chọn vùng nhớ
 #define I_MEM 0
 #define Q_MEM 1
 #define M_MEM 2
+#define AI_MEM 3
+#define u16_VM_MEM 4
+#define u32_VM_MEM 5
+#define f32_VM_MEM 6
 
 // Chọn số lượng biến cho vùng nhớ (kiểu byte)
 #define SUM_I 3
 #define SUM_Q 3
 #define SUM_M 3
+#define SUM_AI 3
 
 /*******************************************************************************
  * Variables
@@ -47,6 +59,8 @@ static void SetupCounterUpOrDown(LinkList *(*pMain), char *OutString, FILE *pFil
 static void SetupCounterUpDown(LinkList *(*pMain), char *OutString, FILE *pFile);
 static char *CheckQuestionMask(int CountQuestionMark, char *OutString);
 static void InsertMov(LinkList *(*pMain), char *OutString, int CountQuestionMark, FILE *pFile, int checkMov);
+static void InsertConvert(LinkList *(*pMain), char *OutString, int CountQuestionMark, FILE *pFile, int TypeConvert);
+static void InsertCaculate(LinkList *(*pMain), char *OutString, int CountQuestionMark, FILE *pFile, int TypeConvert);
 static int getNumber(char *p, int len);
 static void DefineRegionMemory(FILE *pFile, int memoryRegion, int sumOfmem);
 static void DefineIO(FILE *pFile, int memoryRegion, int sumOfmem);
@@ -250,7 +264,7 @@ static void SetupCounterUpDown(LinkList *(*pMain), char *OutString, FILE *pFile)
 
 static void DefineRegionMemory(FILE *pFile, int memoryRegion, int sumOfmem)
 {
-    char check[2];
+    char check[8];
     if (memoryRegion == I_MEM)
     {
         fprintf(pFile, "\n\n// Define I\n");
@@ -266,20 +280,51 @@ static void DefineRegionMemory(FILE *pFile, int memoryRegion, int sumOfmem)
         fprintf(pFile, "\n\n// Define M\n");
         strcpy(check, "M");
     }
+    else if (memoryRegion == AI_MEM)
+    {
+        fprintf(pFile, "\n\n// Define AIW\n");
+        strcpy(check, "AI");
+    }
+    else if (memoryRegion == u16_VM_MEM)
+    {
+        fprintf(pFile, "\n\n// Define AIW\n");
+        strcpy(check, "u16VW");
+    }
+    else if (memoryRegion == u32_VM_MEM)
+    {
+        fprintf(pFile, "\n\n// Define AIW\n");
+        strcpy(check, "u32VD");
+    }
+    else if (memoryRegion == f32_VM_MEM)
+    {
+        fprintf(pFile, "\n\n// Define AIW\n");
+        strcpy(check, "f32VD");
+    }
 
     for (int x = 0; x < sumOfmem; x++)
     {
         int bytedef = 1; // Định nghĩa 1 byte , dW , W
         for (int i = 0; i < 8; i++)
         {
-            if (bytedef == 1)
+            if (memoryRegion < AI_MEM)
             {
-                fprintf(pFile, "#define %sB%d %s[%d][%d]\n", check, x, check, x, i);
-                fprintf(pFile, "#define %sDW%d %s[%d][%d]\n", check, x, check, x, i);
-                fprintf(pFile, "#define %sW%d %s[%d][%d]\n", check, x, check, x, i);
-                bytedef = 0;
+                if (bytedef == 1)
+                {
+                    fprintf(pFile, "#define %sB%d %s[%d][%d]\n", check, x, check, x, i);
+                    fprintf(pFile, "#define %sDW%d %s[%d][%d]\n", check, x, check, x, i);
+                    fprintf(pFile, "#define %sW%d %s[%d][%d]\n", check, x, check, x, i);
+                    bytedef = 0;
+                }
+                fprintf(pFile, "#define %s%d_%d %s[%d][%d]\n", check, x, i, check, x, i);
             }
-            fprintf(pFile, "#define %s%d_%d %s[%d][%d]\n", check, x, i, check, x, i);
+            else if (memoryRegion >= AI_MEM)
+            {
+                fprintf(pFile, "#define %sW%d %s[%d][%d]\n", check, i, check, i);
+            }
+            else
+            {
+                fprintf(pFile, "#define %s%d %s[%d]\n", check, i, check, i);
+            }
         }
     }
 }
@@ -337,18 +382,26 @@ static void DefineIO(FILE *pFile, int memoryRegion, int sumOfmem)
 
 static void readInputPin(FILE *pFile, int sumOfmem)
 {
+    int Search =0;
+
     fprintf(pFile, "{\n");
+
     for (int x = 0; x < sumOfmem; x++)
     {
         char *compare;
         for (int i = 0; i < 8; i++)
         {
-            char buffer[15];
-            sprintf(buffer, "I%d_%d", x, i);
-            compare = buffer;
-            int Search = H_FindFunction(compare);
+            char buffer_I[15];
+            char buffer_AI[15];
+            sprintf(buffer_I, "I%d_%d", x, i);
+            sprintf(buffer_AI, "AIW_%d", i);
+            compare = buffer_I;
+            Search = H_FindFunction(compare);
             if (Search >= 0)
                 fprintf(pFile, "%s = !HAL_GPIO_ReadPin(%s_PORT, %s_PIN);\n", g_Save_IO[Search], g_Save_IO[Search], g_Save_IO[Search]);
+            compare = buffer_AI;
+
+            Search = H_FindFunction(compare);
         }
     }
     fprintf(pFile, "}\n");
@@ -406,6 +459,25 @@ static void InsertMov(LinkList *(*pMain), char *OutString, int CountQuestionMark
             InsertString = MS_AddParenthesesIfMissing(InsertString);
             // printf("\n%s\n", InsertString);
             fprintf(pFile, "if(%s)\n ", InsertString);
+
+            if (strncmp(temp->data, "VW",2) == 0)
+            {
+                temp->data = MS_StrAllocAndAppend("u16",temp->data);
+            }
+            else if (strncmp(temp->data, "VD",2) == 0)
+            {
+                temp->data = MS_StrAllocAndAppend("u32",temp->data);
+            }
+
+            if (strncmp((*pMain)->data, "VW",2) == 0)
+            {
+                (*pMain)->data = MS_StrAllocAndAppend("u16",(*pMain)->data);
+            }
+            else if (strncmp((*pMain)->data, "VD",2) == 0)
+            {
+                (*pMain)->data = MS_StrAllocAndAppend("u32",temp->data);
+            }
+
             fprintf(pFile, " (memcpy(&%s,&%s,%d)) ;\n", temp->data, (*pMain)->data, check);
             L_DeleteLinkList(&(*pMain), &((*pMain)->prev), &((*pMain)->next));
             L_DeleteLinkList(&temp, &(temp->prev), &(temp->next));
@@ -430,6 +502,95 @@ static void InsertMov(LinkList *(*pMain), char *OutString, int CountQuestionMark
         fprintf(pFile, " (memcpy(&%s,&%s,1)) ; \n", temp->data, (*pMain)->data);
     }
 }
+
+
+static void InsertConvert(LinkList *(*pMain), char *OutString, int CountQuestionMark, FILE *pFile, int TypeConvert)
+{
+    LinkList *pNext = (*pMain)->next;
+    LinkList *pNext1 = pNext->next;
+    // pNext = pNext1->next;
+    LinkList *temp;
+    temp = (*pMain);
+    (*pMain) = (*pMain)->next;
+    // L_DeleteLinkList(&temp, &(temp->prev), &(temp->next));
+    temp = (*pMain)->next;
+
+    if (TypeConvert == CONVERT_INT_TO_DINT)
+    {
+        char *InsertString = CheckQuestionMask(CountQuestionMark, OutString);
+        InsertString = MS_AddParenthesesIfMissing(InsertString);
+        // printf("\n%s\n", InsertString);
+        fprintf(pFile, "if(%s)\n ", InsertString);
+        fprintf(pFile, " u32%s = (uint32_t)u16%s;\n", temp->data, (*pMain)->data);
+        (*pMain) = pNext->next;
+    }
+    else if (TypeConvert == CONVERT_DINT_TO_REAL)
+    {
+        char *InsertString = CheckQuestionMask(CountQuestionMark, OutString);
+        InsertString = MS_AddParenthesesIfMissing(InsertString);
+        // printf("\n%s\n", InsertString);
+        fprintf(pFile, "if(%s)\n ", InsertString);
+        fprintf(pFile, " f32%s = (float)u32%s;\n", temp->data, (*pMain)->data);
+        (*pMain) = pNext->next;
+    }
+}
+
+static void InsertCaculate(LinkList *(*pMain), char *OutString, int CountQuestionMark, FILE *pFile, int TypeConvert)
+{
+    int i = 0;
+    int check = 1;
+    LinkList *pNext = (*pMain)->next;
+    LinkList *pNext1 = pNext->next;
+    // pNext = pNext1->next;
+    LinkList *temp;
+    temp = (*pMain);
+    (*pMain) = (*pMain)->next;
+    // L_DeleteLinkList(&temp, &(temp->prev), &(temp->next));
+    temp = (*pMain)->next;
+
+
+    if (strncmp(temp->data, "VW",2) == 0)
+    {
+        temp->data = MS_StrAllocAndAppend("u16",temp->data);
+    }
+    else if (strncmp(temp->data, "VD",2) == 0)
+    {
+        temp->data = MS_StrAllocAndAppend("u32",temp->data);
+    }
+    else
+    {
+        check = 0;
+    }
+
+    while(((*pMain)->data[i] !='\0') && check)
+    {
+        if((*pMain)->data[i] == '_')
+        {
+            (*pMain)->data[i] = '.';
+        }
+        i++;
+    }
+
+    if (TypeConvert == CAL_DIV)
+    {
+        char *InsertString = CheckQuestionMask(CountQuestionMark, OutString);
+        InsertString = MS_AddParenthesesIfMissing(InsertString);
+        // printf("\n%s\n", InsertString);
+        fprintf(pFile, "if(%s)\n ", InsertString);
+        fprintf(pFile, " %s = %s/%s;\n", temp->data,temp->data, (*pMain)->data);
+        (*pMain) = pNext->next;
+    }
+    else if (TypeConvert == CAL_MUL)
+    {
+        char *InsertString = CheckQuestionMask(CountQuestionMark, OutString);
+        InsertString = MS_AddParenthesesIfMissing(InsertString);
+        // printf("\n%s\n", InsertString);
+        fprintf(pFile, "if(%s)\n ", InsertString);
+        fprintf(pFile, " %s = %s*%s;\n", temp->data,temp->data, (*pMain)->data);
+        (*pMain) = pNext->next;
+    }
+}
+
 
 static int getNumber(char *p, int len) // Đọc số từ chuỗi  vd : "97" -> (int) 97
 {
@@ -564,19 +725,19 @@ void STL_CreatFileNoComment(int *RowOfFile)
 void STL_CreatList(int RowOfFile)
 {
     LinkList *pMain;
-    char TempArray[20];
+    char TempArray[30];
     First = NULL;
     FILE *pFileFinal;
     pFileFinal = fopen("PLC.txt", "r");
     for (int i = 0; i < RowOfFile; i++)
     {
-        fgets(TempArray, 20, pFileFinal);
-        for (int CharacterOfRow = 0; CharacterOfRow < 20; CharacterOfRow++)
+        fgets(TempArray, 30, pFileFinal);
+        for (int CharacterOfRow = 0; CharacterOfRow < 30; CharacterOfRow++)
         {
             pMain = (LinkList *)malloc(sizeof(LinkList));
             pMain->next = NULL;
-            pMain->data = (char *)calloc(20, sizeof(char));
-            for (int CheckCharacter = 0; CheckCharacter < 20; CheckCharacter++)
+            pMain->data = (char *)calloc(30, sizeof(char));
+            for (int CheckCharacter = 0; CheckCharacter < 30; CheckCharacter++)
             {
 
                 if (TempArray[CharacterOfRow] == ',')
@@ -655,6 +816,11 @@ void STL_SaveDataIO(void)
             H_InsertFunction(pMain->data);
         }
         else if ((strncmp(pMain->data, "TO", 2) == 0))
+        {
+            pMain = pMain->next;
+            H_InsertFunction(pMain->data);
+        }
+        else if ((strncmp(pMain->data, "MOV", 3) == 0))
         {
             pMain = pMain->next;
             H_InsertFunction(pMain->data);
@@ -977,9 +1143,16 @@ void STL_InsertListToFileData(void)
     pMain = FirstFinal;
     int CountNetWork = 0;
     int checkTimer = 1;
-
+    int debug_count =0;
     while (pMain != NULL)
     {
+        printf("%s-",pMain->data);
+        pMain = pMain->next;
+    }
+    pMain =FirstFinal;
+    while (pMain != NULL)
+    {
+        debug_count++;
 
         if (CheckEndNetWork == 0) // Chưa kết thúc 1 network
         {
@@ -1847,7 +2020,70 @@ void STL_InsertListToFileData(void)
             OutString = "";
             OutString = MS_StrAllocAndAppend(OutString, OutStringLP);
         }
-
+        else if ((strncmp(pMain->data, "ITD",3) == 0))
+        {
+            char *tempCheckOutString = "";
+            char *tokenCkeck;
+            tempCheckOutString = MS_StrAllocAndAppend(OutString, tempCheckOutString);
+            tokenCkeck = strtok(tempCheckOutString, "=");
+            int sizetokenCkeck = strlen(tokenCkeck);
+            int sizeOutString = strlen(OutString);
+            if (sizetokenCkeck != sizeOutString)
+            {
+                OutString = "";
+                OutString = MS_StrAllocAndAppend(OutString, tokenCkeck);
+            }
+            InsertConvert(&pMain,OutString, CountQuestionMark, pFile, CONVERT_INT_TO_DINT);
+            continue;
+        }
+        else if ((strncmp(pMain->data, "DTR",3) == 0))
+        {
+            char *tempCheckOutString = "";
+            char *tokenCkeck;
+            tempCheckOutString = MS_StrAllocAndAppend(OutString, tempCheckOutString);
+            tokenCkeck = strtok(tempCheckOutString, "=");
+            int sizetokenCkeck = strlen(tokenCkeck);
+            int sizeOutString = strlen(OutString);
+            if (sizetokenCkeck != sizeOutString)
+            {
+                OutString = "";
+                OutString = MS_StrAllocAndAppend(OutString, tokenCkeck);
+            }
+            InsertConvert(&pMain,OutString, CountQuestionMark, pFile, CONVERT_DINT_TO_REAL);
+            continue;
+        }
+        else if ((strncmp(pMain->data, "/R",2) == 0))
+        {
+            char *tempCheckOutString = "";
+            char *tokenCkeck;
+            tempCheckOutString = MS_StrAllocAndAppend(OutString, tempCheckOutString);
+            tokenCkeck = strtok(tempCheckOutString, "=");
+            int sizetokenCkeck = strlen(tokenCkeck);
+            int sizeOutString = strlen(OutString);
+            if (sizetokenCkeck != sizeOutString)
+            {
+                OutString = "";
+                OutString = MS_StrAllocAndAppend(OutString, tokenCkeck);
+            }
+            InsertCaculate(&pMain,OutString, CountQuestionMark, pFile, CAL_DIV);
+            continue;
+        }
+        else if ((strncmp(pMain->data, "*R",2) == 0))
+        {
+            char *tempCheckOutString = "";
+            char *tokenCkeck;
+            tempCheckOutString = MS_StrAllocAndAppend(OutString, tempCheckOutString);
+            tokenCkeck = strtok(tempCheckOutString, "=");
+            int sizetokenCkeck = strlen(tokenCkeck);
+            int sizeOutString = strlen(OutString);
+            if (sizetokenCkeck != sizeOutString)
+            {
+                OutString = "";
+                OutString = MS_StrAllocAndAppend(OutString, tokenCkeck);
+            }
+            InsertCaculate(&pMain,OutString, CountQuestionMark, pFile, CAL_MUL);
+            continue;
+        }
         pMain = pMain->next;
     }
     fprintf(pFile, " write_Pin_Output();\n}\n}\n");
@@ -1876,6 +2112,14 @@ void STL_FileDefineData(void)
 
     DefineRegionMemory(pFile, M_MEM, SUM_M); //  M[2][8]
 
+    DefineRegionMemory(pFile, AI_MEM, 1); //  u16_VM[8]
+
+    DefineRegionMemory(pFile, u16_VM_MEM, 1); //  u32_VM[8]
+
+    DefineRegionMemory(pFile, u32_VM_MEM, 1); //  u32_VM[8]
+
+    DefineRegionMemory(pFile, f32_VM_MEM, 1); //  f32_VM[8]
+
     DefineIO(pFile, I_MEM, SUM_I);
     // Ix_y_PIN GPIO_PIN_k
     // Ix_y_PORT GPIOx
@@ -1884,7 +2128,8 @@ void STL_FileDefineData(void)
     // Qx_y_PIN GPIO_PIN_k
     // Qx_y_PORT GPIOx
 
-    fprintf(pFile, "\nvoid read_Pin_Input(void);\n");
+    fprintf(pFile, "\nextern volatile uint16_t AI[%d];\n",SUM_AI);
+    fprintf(pFile, "void read_Pin_Input(void);\n");
     fprintf(pFile, "void write_Pin_Output(void);\n");
     fprintf(pFile, "void Main_task(void *param) ;\n");
     if (CountTimer > 0)
@@ -1910,7 +2155,7 @@ void STL_FileData(void)
         printf("Create file  DataPLC.c failed \n");
     fprintf(pFile, "#include\"DataPLC.h\"\n\n");
 
-    fprintf(pFile, "volatile static uint8_t I[%d][8]={};\nvolatile static uint8_t Q[%d][8]={};\nvolatile static uint8_t M[%d][8]={};\n", SUM_I, SUM_Q, SUM_M);
+    fprintf(pFile, "volatile static uint8_t I[%d][8]={};\nvolatile uint16_t AI[%d]={};\nvolatile static uint8_t Q[%d][8]={};\nvolatile static uint8_t M[%d][8]={};\nvolatile static uint16_t u16_VM[8]={};\nvolatile static uint32_t u32_VM[8]={};\nvolatile static float f32_VM[8]={};\n", SUM_I, SUM_AI, SUM_Q, SUM_M);
     while (pMain)
     {
         if (strcmp(pMain->data, "TON") == 0)
@@ -2013,10 +2258,6 @@ void STL_FileData(void)
         pMain = pMain->next;
     }
     pMain = FirstFinal;
-    fprintf(pFile, "\nvoid read_Pin_Input()\n");
-    readInputPin(pFile, SUM_I);
-    fprintf(pFile, "void write_Pin_Output()\n");
-    writeOutputPin(pFile, SUM_Q);
     fprintf(pFile, "void Main_task( void *param)\n");
     fprintf(pFile, "{\n");
 
@@ -2097,4 +2338,20 @@ void STL_AddTimerFuntion(void)
     system("del PLC.txt");
 }
 
+void STL_AddReadWriteFunction(void)
+{
+    FILE *pFile;
+    pFile = fopen("build/DataPLC.c", "a");
+
+    fprintf(pFile, "\nvoid read_Pin_Input(void)\n");
+
+    readInputPin(pFile, SUM_I);
+
+    fprintf(pFile, "void write_Pin_Output(void)\n");
+
+    writeOutputPin(pFile, SUM_Q);
+
+    fclose(pFile);
+
+}
 
