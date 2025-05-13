@@ -317,7 +317,7 @@ static void DefineRegionMemory(FILE *pFile, int memoryRegion, int sumOfmem)
                 }
                 fprintf(pFile, "#define %s%d_%d %s[%d][%d]\n", check, x, i, check, x, i);
             }
-            else if (memoryRegion >= AI_MEM)
+            else if (memoryRegion == AI_MEM)
             {
                 fprintf(pFile, "#define %sW%d %s[%d][%d]\n", check, i, check, i);
             }
