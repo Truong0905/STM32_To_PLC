@@ -124,36 +124,36 @@
 
 
 // Define AIW
-#define u16VWW0 u16VW[0][2]
-#define u16VWW1 u16VW[1][2]
-#define u16VWW2 u16VW[2][2]
-#define u16VWW3 u16VW[3][2]
-#define u16VWW4 u16VW[4][2]
-#define u16VWW5 u16VW[5][2]
-#define u16VWW6 u16VW[6][2]
-#define u16VWW7 u16VW[7][2]
+#define u16VW0 u16VW[0]
+#define u16VW1 u16VW[1]
+#define u16VW2 u16VW[2]
+#define u16VW3 u16VW[3]
+#define u16VW4 u16VW[4]
+#define u16VW5 u16VW[5]
+#define u16VW6 u16VW[6]
+#define u16VW7 u16VW[7]
 
 
 // Define AIW
-#define u32VDW0 u32VD[0][2]
-#define u32VDW1 u32VD[1][2]
-#define u32VDW2 u32VD[2][2]
-#define u32VDW3 u32VD[3][2]
-#define u32VDW4 u32VD[4][2]
-#define u32VDW5 u32VD[5][2]
-#define u32VDW6 u32VD[6][2]
-#define u32VDW7 u32VD[7][2]
+#define u32VD0 u32VD[0]
+#define u32VD1 u32VD[1]
+#define u32VD2 u32VD[2]
+#define u32VD3 u32VD[3]
+#define u32VD4 u32VD[4]
+#define u32VD5 u32VD[5]
+#define u32VD6 u32VD[6]
+#define u32VD7 u32VD[7]
 
 
 // Define AIW
-#define f32VDW0 f32VD[0][2]
-#define f32VDW1 f32VD[1][2]
-#define f32VDW2 f32VD[2][2]
-#define f32VDW3 f32VD[3][2]
-#define f32VDW4 f32VD[4][2]
-#define f32VDW5 f32VD[5][2]
-#define f32VDW6 f32VD[6][2]
-#define f32VDW7 f32VD[7][2]
+#define f32VD0 f32VD[0]
+#define f32VD1 f32VD[1]
+#define f32VD2 f32VD[2]
+#define f32VD3 f32VD[3]
+#define f32VD4 f32VD[4]
+#define f32VD5 f32VD[5]
+#define f32VD6 f32VD[6]
+#define f32VD7 f32VD[7]
 
 
 // Define Input Pin

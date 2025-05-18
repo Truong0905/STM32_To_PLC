@@ -555,7 +555,7 @@ static void InsertCaculate(LinkList *(*pMain), char *OutString, int CountQuestio
     }
     else if (strncmp(temp->data, "VD",2) == 0)
     {
-        temp->data = MS_StrAllocAndAppend("u32",temp->data);
+        temp->data = MS_StrAllocAndAppend("f32",temp->data);
     }
     else
     {
