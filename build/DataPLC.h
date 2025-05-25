@@ -157,19 +157,32 @@
 
 
 // Define Input Pin
+#define I0_0_PIN GPIO_PIN_
+#define I0_1_PIN GPIO_PIN_
 
 
 // Define Input Port
+#define I0_0_PORT GPIO
+#define I0_1_PORT GPIO
 
 
 // Define Output pin
+#define Q1_6_PIN GPIO_PIN_
+#define Q2_0_PIN GPIO_PIN_
+#define Q2_2_PIN GPIO_PIN_
 
 
 // Define Output Port
+#define Q1_6_PORT GPIO
+#define Q2_0_PORT GPIO
+#define Q2_2_PORT GPIO
 
 extern volatile uint16_t AI[3];
 void read_Pin_Input(void);
 void write_Pin_Output(void);
 void Main_task(void *param) ;
+void TimerCallBack(TimerHandle_t xTimer);
+void initTimer(void);
+extern TimerHandle_t  handle_timerPLC[1];
 
 #endif /*INC_CSDL_H_*/
