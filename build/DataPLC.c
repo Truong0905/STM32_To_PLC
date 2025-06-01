@@ -1,12 +1,12 @@
 #include "DataPLC.h"
 
 volatile static uint8_t I[3][8] = {};
-volatile uint16_t AI[3] = {};
+volatile uint16_t AI[8] = {};
 volatile static uint8_t Q[3][8] = {};
 volatile static uint8_t M[3][8] = {};
-volatile static uint16_t u16_VM[8] = {};
-volatile static uint32_t u32_VM[8] = {};
-volatile static float f32_VM[8] = {};
+volatile static uint16_t u16VW[8] = {};
+volatile static uint32_t u32VD[8] = {};
+volatile static float f32VD[8] = {};
 volatile static uint8_t T37 = 0;
 volatile static uint32_t countT37 = 0;
 volatile static uint32_t T37reset = 0;
@@ -20,11 +20,12 @@ volatile static uint8_t resetC1 = 0;
 volatile static const uint32_t datC1 = 50;
 volatile static uint8_t startC1 = 0;
 volatile static uint8_t checkC1 = 0;
-void Main_task(void *param)
+void PLC_Main_Task(void *param)
 {
+	(void)param;
 	while (1)
 	{
-		read_Pin_Input();
+		PLC_Read_Pin_Input();
 		/*--------------NetWork 1 -----------*/
 
 		volatile uint8_t I0_0sl0 = 0;
@@ -38,18 +39,7 @@ void Main_task(void *param)
 			checkEU0 = 1;
 			I0_0sl0 = 1;
 		}
-		volatile uint8_t I0_1sl1 = 1;
-		volatile static uint8_t checkEU1 = 1;
-		if (!(!I0_1))
-		{
-			checkEU1 = 0;
-		}
-		if ((!checkEU1) && (!I0_1))
-		{
-			checkEU1 = 1;
-			I0_1sl1 = 0;
-		}
-		M0_0 = (((I0_0sl0 + M0_0)) * !I0_1sl1);
+		M0_0 = (((I0_0sl0 + M0_0)) * !I0_1);
 		if (M0_0 > 0)
 		{
 			M0_0 = 1;
@@ -95,23 +85,23 @@ void Main_task(void *param)
 		}
 		/*--------------NetWork 3 -----------*/
 
-		volatile uint8_t T37sl2 = 0;
-		volatile static uint8_t checkEU2 = 1;
+		volatile uint8_t T37sl1 = 0;
+		volatile static uint8_t checkEU1 = 1;
 		if (!(T37))
 		{
-			checkEU2 = 0;
+			checkEU1 = 0;
 		}
-		if ((!checkEU2) && (T37))
+		if ((!checkEU1) && (T37))
 		{
-			checkEU2 = 1;
-			T37sl2 = 1;
+			checkEU1 = 1;
+			T37sl1 = 1;
 		}
 		volatile uint8_t tempC1_0 = 0;
 		if (countC1 >= 50)
 		{
 			tempC1_0 = 1;
 		}
-		vaoC1 = (T37sl2);
+		vaoC1 = (T37sl1);
 		resetC1 = (tempC1_0 + !M0_0);
 		if (resetC1)
 		{
@@ -202,10 +192,39 @@ void Main_task(void *param)
 		{
 			T37reset = 0;
 		}
-		write_Pin_Output();
+		/*--------------NetWork 8 -----------*/
+
+		if ((M0_0))
+			(memcpy(&u16VW1, &AIW0, 2));
+		M1_1 = ((M0_0));
+		if (M1_1 > 0)
+		{
+			M1_1 = 1;
+		}
+		else
+		{
+			M1_1 = 0;
+		}
+		/*--------------NetWork 9 -----------*/
+
+		if ((M0_0))
+			u32VD0 = (uint32_t)u16VW1;
+		/*--------------NetWork 10 -----------*/
+
+		if ((M0_0))
+			f32VD10 = (float)u32VD0;
+		/*--------------NetWork 11 -----------*/
+
+		if ((M0_0))
+			f32VD10 = f32VD10 / 4096.0;
+		/*--------------NetWork 12 -----------*/
+
+		if ((M0_0))
+			f32VD10 = f32VD10 * 100.0;
+		PLC_Write_Pin_Output();
 	}
 }
-void TimerCallBack(TimerHandle_t xTimer)
+void PLC_TimerCallBack(TimerHandle_t xTimer)
 {
 	int id;
 	id = (uint32_t)pvTimerGetTimerID(xTimer);
@@ -216,17 +235,17 @@ void TimerCallBack(TimerHandle_t xTimer)
 		break;
 	}
 }
-void initTimer(void)
+void PLC_InitTimer(void)
 {
-	handle_timerPLC[0] = xTimerCreate("timerTONT37", pdMS_TO_TICKS(100), pdTRUE, (static void *)(0 + 1), TimerCallBack);
+	handle_timerPLC[0] = xTimerCreate("timerTONT37", pdMS_TO_TICKS(100), pdTRUE, (static void *)(0 + 1), PLC_TimerCallBack);
 }
 
-void read_Pin_Input(void)
+void PLC_Read_Pin_Input(void)
 {
 	I0_0 = !HAL_GPIO_ReadPin(I0_0_PORT, I0_0_PIN);
 	I0_1 = !HAL_GPIO_ReadPin(I0_1_PORT, I0_1_PIN);
 }
-void write_Pin_Output(void)
+void PLC_Write_Pin_Output(void)
 {
 	if (Q1_6 >= 1)
 	{

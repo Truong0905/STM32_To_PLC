@@ -6,7 +6,6 @@ LD     I0.0
 EU
 O      M0.0
 AN     I0.1
-EU
 =      M0.0
 Network 2 
 LD     M0.0
@@ -33,4 +32,22 @@ A      M0.0
 Network 7 
 LD     T37
 R      T37, 1
+Network 8 
+LD     M0.0
+MOVW   AIW0, VW1
+AENO
+=      M1.1
+
+Network 9 
+LD     M0.0
+ITD    VW1, VD0
+Network 10 
+LD     M0.0
+DTR    VD0, VD10
+Network 11 
+LD     M0.0
+/R     4096.0, VD10
+Network 12
+LD     M0.0
+*R     100.0, VD10
 END_ORGANIZATION_BLOCK

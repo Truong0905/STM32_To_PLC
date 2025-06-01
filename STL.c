@@ -29,15 +29,15 @@
 #define Q_MEM 1
 #define M_MEM 2
 #define AI_MEM 3
-#define u16_VM_MEM 4
-#define u32_VM_MEM 5
-#define f32_VM_MEM 6
+#define u16_VW_MEM 4
+#define u32_VD_MEM 5
+#define f32_VD_MEM 6
 
 // Chọn số lượng biến cho vùng nhớ (kiểu byte)
 #define SUM_I 3
 #define SUM_Q 3
 #define SUM_M 3
-#define SUM_AI 3
+#define SUM_AI 8
 
 /*******************************************************************************
  * Variables
@@ -267,38 +267,38 @@ static void DefineRegionMemory(FILE *pFile, int memoryRegion, int sumOfmem)
     char check[8];
     if (memoryRegion == I_MEM)
     {
-        fprintf(pFile, "\n\n// Define I\n");
+        fprintf(pFile, "\n\n/* Define I */\n");
         strcpy(check, "I");
     }
     else if (memoryRegion == Q_MEM)
     {
-        fprintf(pFile, "\n\n// Define Q\n");
+        fprintf(pFile, "\n\n/* Define Q */\n");
         strcpy(check, "Q");
     }
     else if (memoryRegion == M_MEM)
     {
-        fprintf(pFile, "\n\n// Define M\n");
+        fprintf(pFile, "\n\n/* Define M */\n");
         strcpy(check, "M");
     }
     else if (memoryRegion == AI_MEM)
     {
-        fprintf(pFile, "\n\n// Define AIW\n");
+        fprintf(pFile, "\n\n/* Define AIW */\n");
         strcpy(check, "AI");
     }
-    else if (memoryRegion == u16_VM_MEM)
+    else if (memoryRegion == u16_VW_MEM)
     {
-        fprintf(pFile, "\n\n// Define AIW\n");
+        fprintf(pFile, "\n\n/* Define VW */\n");
         strcpy(check, "u16VW");
     }
-    else if (memoryRegion == u32_VM_MEM)
+    else if (memoryRegion == u32_VD_MEM)
     {
-        fprintf(pFile, "\n\n// Define AIW\n");
+        fprintf(pFile, "\n\n/* Define uint32_t VD */\n");
         strcpy(check, "u32VD");
     }
-    else if (memoryRegion == f32_VM_MEM)
+    else if (memoryRegion == f32_VD_MEM)
     {
-        fprintf(pFile, "\n\n// Define AIW\n");
-        strcpy(check, "f32VD");
+        fprintf(pFile, "\n\n/*  Define float VD */\n");
+        strcpy(check, "f32VD1");
     }
 
     for (int x = 0; x < sumOfmem; x++)
@@ -319,7 +319,8 @@ static void DefineRegionMemory(FILE *pFile, int memoryRegion, int sumOfmem)
             }
             else if (memoryRegion == AI_MEM)
             {
-                fprintf(pFile, "#define %sW%d %s[%d][%d]\n", check, i, check, i);
+                fprintf(pFile, "#define %sW%d %s[%d]\n", check, i, check,i);
+
             }
             else
             {
@@ -334,12 +335,12 @@ static void DefineIO(FILE *pFile, int memoryRegion, int sumOfmem)
     char check[2];
     if (memoryRegion == I_MEM)
     {
-        fprintf(pFile, "\n\n// Define Input Pin\n");
+        fprintf(pFile, "\n\n/* Define Input Pin */\n");
         strcpy(check, "I");
     }
     else if (memoryRegion == Q_MEM)
     {
-        fprintf(pFile, "\n\n// Define Output pin\n");
+        fprintf(pFile, "\n\n/* Define Output pin */\n");
         strcpy(check, "Q");
     }
     for (int x = 0; x < sumOfmem; x++)
@@ -358,11 +359,11 @@ static void DefineIO(FILE *pFile, int memoryRegion, int sumOfmem)
 
     if (memoryRegion == I_MEM)
     {
-        fprintf(pFile, "\n\n// Define Input Port\n");
+        fprintf(pFile, "\n\n/* Define Input Port */\n");
     }
     else if (memoryRegion == Q_MEM)
     {
-        fprintf(pFile, "\n\n// Define Output Port\n");
+        fprintf(pFile, "\n\n/* Define Output Port */\n");
     }
     for (int x = 0; x < sumOfmem; x++)
     {
@@ -555,7 +556,12 @@ static void InsertCaculate(LinkList *(*pMain), char *OutString, int CountQuestio
     }
     else if (strncmp(temp->data, "VD",2) == 0)
     {
-        temp->data = MS_StrAllocAndAppend("f32",temp->data);
+        int a = strlen(temp->data);
+         if (a >= 4)
+            temp->data = MS_StrAllocAndAppend("f32",temp->data);
+        else
+            temp->data = MS_StrAllocAndAppend("u32",temp->data);
+
     }
     else
     {
@@ -662,7 +668,7 @@ static void InsertTimer(LinkList *pMain, int *CountTimer, FILE *pFileTimer)
 
     pNext = pNext->next; // 20
                          // fprintf(pFileTimer, " handle_timer[%d] =  xTimerCreate(\"timer%s\", pdMS_TO_TICKS(%s*%d),pdFALSE,(static void *)(%d+1),%s) ;\n", *CountTimer, buffer, pNext->data, b, *CountTimer, buffer);
-    fprintf(pFileTimer, " handle_timerPLC[%d] =  xTimerCreate(\"timer%s\", pdMS_TO_TICKS(%d),pdTRUE,(static void *)(%d+1),TimerCallBack) ;\n", *CountTimer, buffer, b, *CountTimer);
+    fprintf(pFileTimer, " handle_timerPLC[%d] =  xTimerCreate(\"timer%s\", pdMS_TO_TICKS(%d),pdTRUE,(static void *)(%d+1),PLC_TimerCallBack) ;\n", *CountTimer, buffer, b, *CountTimer);
     sprintf(buffer, "%s_%d", buffer, *CountTimer + 1);
     H_InsertFunction(buffer);
     (*CountTimer)++;
@@ -1128,7 +1134,7 @@ void STL_InsertListToFileData(void)
     FILE *pFile;
     pFile = fopen("build/DataPLC.c", "a");
     fprintf(pFile, "while(1)\n{\n");
-    fprintf(pFile, "read_Pin_Input();\n");
+    fprintf(pFile, "PLC_Read_Pin_Input();\n");
     char *OutString;
     char *InsertOpeningBracket = "(";
     char *InsertClosingBracket = ")";
@@ -1144,12 +1150,8 @@ void STL_InsertListToFileData(void)
     int CountNetWork = 0;
     int checkTimer = 1;
     int debug_count =0;
-    while (pMain != NULL)
-    {
-        printf("%s-",pMain->data);
-        pMain = pMain->next;
-    }
     pMain =FirstFinal;
+
     while (pMain != NULL)
     {
         debug_count++;
@@ -1732,7 +1734,7 @@ void STL_InsertListToFileData(void)
             if (checkTimer == 1)
             {
                 pFileTimer = fopen("Timer.txt", "w");
-                fprintf(pFileTimer, "void initTimer(void)\n");
+                fprintf(pFileTimer, "void PLC_InitTimer(void)\n");
                 fprintf(pFileTimer, "{\n");
                 checkTimer = 0;
             }
@@ -1790,7 +1792,7 @@ void STL_InsertListToFileData(void)
             if (checkTimer == 1)
             {
                 pFileTimer = fopen("Timer.txt", "w");
-                fprintf(pFileTimer, "void initTimer(void)\n");
+                fprintf(pFileTimer, "void PLC_InitTimer(void)\n");
                 fprintf(pFileTimer, "{\n");
                 checkTimer = 0;
             }
@@ -1842,7 +1844,7 @@ void STL_InsertListToFileData(void)
             if (checkTimer == 1)
             {
                 pFileTimer = fopen("Timer.txt", "w");
-                fprintf(pFileTimer, "void initTimer(void)\n");
+                fprintf(pFileTimer, "void PLC_InitTimer(void)\n");
                 fprintf(pFileTimer, "{\n");
                 checkTimer = 0;
             }
@@ -2086,7 +2088,7 @@ void STL_InsertListToFileData(void)
         }
         pMain = pMain->next;
     }
-    fprintf(pFile, " write_Pin_Output();\n}\n}\n");
+    fprintf(pFile, " PLC_Write_Pin_Output();\n}\n}\n");
     if (pFileTimer)
     {
         fprintf(pFileTimer, "\n}\n");
@@ -2114,11 +2116,11 @@ void STL_FileDefineData(void)
 
     DefineRegionMemory(pFile, AI_MEM, 1); //  u16_VM[8]
 
-    DefineRegionMemory(pFile, u16_VM_MEM, 1); //  u32_VM[8]
+    DefineRegionMemory(pFile, u16_VW_MEM, 1); //  u16VW[8]
 
-    DefineRegionMemory(pFile, u32_VM_MEM, 1); //  u32_VM[8]
+    DefineRegionMemory(pFile, u32_VD_MEM, 1); //  u32VD[8]
 
-    DefineRegionMemory(pFile, f32_VM_MEM, 1); //  f32_VM[8]
+    DefineRegionMemory(pFile, f32_VD_MEM, 1); //  f32VD[8]
 
     DefineIO(pFile, I_MEM, SUM_I);
     // Ix_y_PIN GPIO_PIN_k
@@ -2129,14 +2131,14 @@ void STL_FileDefineData(void)
     // Qx_y_PORT GPIOx
 
     fprintf(pFile, "\nextern volatile uint16_t AI[%d];\n",SUM_AI);
-    fprintf(pFile, "void read_Pin_Input(void);\n");
-    fprintf(pFile, "void write_Pin_Output(void);\n");
-    fprintf(pFile, "void Main_task(void *param) ;\n");
+    fprintf(pFile, "void PLC_Read_Pin_Input(void);\n");
+    fprintf(pFile, "void PLC_Write_Pin_Output(void);\n");
+    fprintf(pFile, "void PLC_Main_Task(void *param) ;\n");
     if (CountTimer > 0)
     {
-        fprintf(pFile, "void TimerCallBack(TimerHandle_t xTimer);\n");
+        fprintf(pFile, "void PLC_TimerCallBack(TimerHandle_t xTimer);\n");
 
-        fprintf(pFile, "void initTimer(void);\n");
+        fprintf(pFile, "void PLC_InitTimer(void);\n");
         fprintf(pFile, "extern TimerHandle_t  handle_timerPLC[%d];\n", CountTimer);
     }
 
@@ -2155,7 +2157,10 @@ void STL_FileData(void)
         printf("Create file  DataPLC.c failed \n");
     fprintf(pFile, "#include\"DataPLC.h\"\n\n");
 
-    fprintf(pFile, "volatile static uint8_t I[%d][8]={};\nvolatile uint16_t AI[%d]={};\nvolatile static uint8_t Q[%d][8]={};\nvolatile static uint8_t M[%d][8]={};\nvolatile static uint16_t u16_VM[8]={};\nvolatile static uint32_t u32_VM[8]={};\nvolatile static float f32_VM[8]={};\n", SUM_I, SUM_AI, SUM_Q, SUM_M);
+    fprintf(pFile, "volatile static uint8_t I[%d][8]={};\nvolatile uint16_t AI[%d]={};\nvolatile static \
+         uint8_t Q[%d][8]={};\nvolatile static uint8_t M[%d][8]={};\nvolatile static uint16_t u16VW[8]={}; \
+         \nvolatile static uint32_t u32VD[8]={};\nvolatile static float f32VD[8]={};\n", SUM_I, SUM_AI, SUM_Q, SUM_M);
+
     while (pMain)
     {
         if (strcmp(pMain->data, "TON") == 0)
@@ -2258,8 +2263,8 @@ void STL_FileData(void)
         pMain = pMain->next;
     }
     pMain = FirstFinal;
-    fprintf(pFile, "void Main_task( void *param)\n");
-    fprintf(pFile, "{\n");
+    fprintf(pFile, "void PLC_Main_Task( void *param)\n");
+    fprintf(pFile, "{\n (void)param; \n");
 
     fclose(pFile);
 }
@@ -2270,7 +2275,7 @@ void STL_AddTimerFuntion(void)
     {
         int check = CountTimer;
         pFile = fopen("build/DataPLC.c", "a");
-        fprintf(pFile, "void TimerCallBack(TimerHandle_t xTimer)\n{\n int id ;\nid = (uint32_t)pvTimerGetTimerID(xTimer) ; \n");
+        fprintf(pFile, "void PLC_TimerCallBack(TimerHandle_t xTimer)\n{\n int id ;\nid = (uint32_t)pvTimerGetTimerID(xTimer) ; \n");
         fprintf(pFile, "switch(id)\n{\n");
 
         for (int i = 0; i < H_PRIMER_NUMBER; i++)
@@ -2343,11 +2348,11 @@ void STL_AddReadWriteFunction(void)
     FILE *pFile;
     pFile = fopen("build/DataPLC.c", "a");
 
-    fprintf(pFile, "\nvoid read_Pin_Input(void)\n");
+    fprintf(pFile, "\nvoid PLC_Read_Pin_Input(void)\n");
 
     readInputPin(pFile, SUM_I);
 
-    fprintf(pFile, "void write_Pin_Output(void)\n");
+    fprintf(pFile, "void PLC_Write_Pin_Output(void)\n");
 
     writeOutputPin(pFile, SUM_Q);
 
