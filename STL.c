@@ -1968,7 +1968,7 @@ void STL_InsertListToFileData(void)
             else
                 fprintf(pFile, "if (%s)\n{\nmemset(&%s,1,%s);\n}\n", OutString, pMain->data, pNext->data);
         }
-        else if ((strncmp(pMain->data, "AW", 2) == 0) || (strncmp(pMain->data, "OW", 2) == 0) || (strncmp(pMain->data, "LDW", 2) == 0)) // AW=
+        else if ((strncmp(pMain->data, "AW", 2) == 0) || (strncmp(pMain->data, "OW", 2) == 0) || (strncmp(pMain->data, "LDW", 2) == 0))
         {
             static int countTC = 0;
             char *token;
@@ -2010,6 +2010,77 @@ void STL_InsertListToFileData(void)
                 L_DeleteLinkList(&(pNext1), &(pNext1->prev), &(pNext1->next));
             }
             countTC++;
+            continue;
+        }
+        else if ((strncmp(pMain->data, "AR", 2) == 0) || (strncmp(pMain->data, "OR", 2) == 0) || (strncmp(pMain->data, "LDR", 2) == 0))
+        {
+            static int coutCompare = 0;
+            char *token;
+            char f32[] = "f32";
+            char null[] ="";
+
+            pNext = pMain->next;
+            pNext1 = pNext->next;
+            char* check_0 = f32;
+            char* check_1 = f32;
+            if ((pNext1->data[0] >=48) && pNext1->data[0] <= 57)
+            {   uint8_t i = 0;
+                while (pNext1->data[i] != 0)
+                {
+                    if (pNext1->data[i] == '_')
+                    {
+                        pNext1->data[i] = '.';
+                        check_1 = null;
+                        break;
+                    }
+                    i++;
+                }
+            }
+
+            if ((pNext->data[0] >=48) && pNext->data[0] <= 57)
+            {   uint8_t i = 0;
+                while (pNext->data[i] != 0)
+                {
+                    if (pNext->data[i] == '_')
+                    {
+                        pNext->data[i] = '.';
+                        check_0 = null;
+                        break;
+                    }
+                    i++;
+                }
+            }
+
+            token = strtok(pMain->data, "R");
+            token = strtok(NULL, "R");
+            if (strcmp(token, "=") == 0)
+            {
+                fprintf(pFile, "volatile uint8_t u8Compare%d = 0 ;\n", coutCompare);
+                fprintf(pFile, "u8Compare%d = 0 ;\n", coutCompare);
+                fprintf(pFile, "if (%s%s == %s%s )\n{\n",check_0, pNext->data, check_1, pNext1->data);
+                fprintf(pFile, "u8Compare%d = 1 ;\n}\n", coutCompare);
+                sprintf(pNext->data, "u8Compare%d", coutCompare);
+                L_DeleteLinkList(&(pNext1), &(pNext1->prev), &(pNext1->next));
+            }
+            else if (strcmp(token, "<>") == 0)
+            {
+                fprintf(pFile, "volatile uint8_t u8Compare%d = 0 ;\n", coutCompare);
+                fprintf(pFile, "u8Compare%d = 0 ;\n", coutCompare);
+                fprintf(pFile, "if (%s%s != %s%s )\n{\n",check_0, pNext->data, check_1, pNext1->data);
+                fprintf(pFile, "u8Compare%d = 1 ;\n}\n", coutCompare);
+                sprintf(pNext->data, "u8Compare%d", coutCompare);
+                L_DeleteLinkList(&(pNext1), &(pNext1->prev), &(pNext1->next));
+            }
+            else
+            {
+                fprintf(pFile, "volatile uint8_t u8Compare%d = 0 ;\n", coutCompare);
+                fprintf(pFile, "u8Compare%d = 0 ;\n", coutCompare);
+                fprintf(pFile, "if (%s%s %s %s%s )\n{\n",check_0, pNext->data, token, check_1, pNext1->data);
+                fprintf(pFile, "u8Compare%d = 1 ;\n}\n", coutCompare);
+                sprintf(pNext->data, "u8Compare%d", coutCompare);
+                L_DeleteLinkList(&(pNext1), &(pNext1->prev), &(pNext1->next));
+            }
+            coutCompare++;
             continue;
         }
         else if (strcmp(pMain->data, "LPS") == 0)
