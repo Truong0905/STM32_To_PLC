@@ -1,7 +1,8 @@
 #ifndef INC_CSDL_H_
 #define INC_CSDL_H_
 
-#include "main.h"
+#include"main.h"
+
 
 /* Define I */
 #define IB0 I[0][0]
@@ -38,6 +39,7 @@
 #define I2_6 I[2][6]
 #define I2_7 I[2][7]
 
+
 /* Define Q */
 #define QB0 Q[0][0]
 #define QDW0 Q[0][0]
@@ -72,6 +74,7 @@
 #define Q2_5 Q[2][5]
 #define Q2_6 Q[2][6]
 #define Q2_7 Q[2][7]
+
 
 /* Define M */
 #define MB0 M[0][0]
@@ -108,6 +111,7 @@
 #define M2_6 M[2][6]
 #define M2_7 M[2][7]
 
+
 /* Define AIW */
 #define AIW0 AI[0]
 #define AIW1 AI[1]
@@ -117,6 +121,7 @@
 #define AIW5 AI[5]
 #define AIW6 AI[6]
 #define AIW7 AI[7]
+
 
 /* Define VW */
 #define u16VW0 u16VW[0]
@@ -128,6 +133,7 @@
 #define u16VW6 u16VW[6]
 #define u16VW7 u16VW[7]
 
+
 /* Define uint32_t VD */
 #define u32VD0 u32VD[0]
 #define u32VD1 u32VD[1]
@@ -137,6 +143,7 @@
 #define u32VD5 u32VD[5]
 #define u32VD6 u32VD[6]
 #define u32VD7 u32VD[7]
+
 
 /*  Define float VD */
 #define f32VD10 f32VD1[0]
@@ -148,30 +155,27 @@
 #define f32VD16 f32VD1[6]
 #define f32VD17 f32VD1[7]
 
+
 /* Define Input Pin */
 #define I0_0_PIN GPIO_PIN_
 #define I0_1_PIN GPIO_PIN_
+
 
 /* Define Input Port */
 #define I0_0_PORT GPIO
 #define I0_1_PORT GPIO
 
+
 /* Define Output pin */
-#define Q1_6_PIN GPIO_PIN_
-#define Q2_0_PIN GPIO_PIN_
-#define Q2_2_PIN GPIO_PIN_
+#define Q0_0_PIN GPIO_PIN_
+
 
 /* Define Output Port */
-#define Q1_6_PORT GPIO
-#define Q2_0_PORT GPIO
-#define Q2_2_PORT GPIO
+#define Q0_0_PORT GPIO
 
 extern volatile uint16_t AI[8];
 void PLC_Read_Pin_Input(void);
 void PLC_Write_Pin_Output(void);
-void PLC_Main_Task(void *param);
-void PLC_TimerCallBack(TimerHandle_t xTimer);
-void PLC_InitTimer(void);
-extern TimerHandle_t handle_timerPLC[1];
+void PLC_Main_Task(void *param) ;
 
 #endif /*INC_CSDL_H_*/
