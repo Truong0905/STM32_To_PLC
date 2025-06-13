@@ -146,14 +146,14 @@
 
 
 /*  Define float VD */
-#define f32VD10 f32VD1[0]
-#define f32VD11 f32VD1[1]
-#define f32VD12 f32VD1[2]
-#define f32VD13 f32VD1[3]
-#define f32VD14 f32VD1[4]
-#define f32VD15 f32VD1[5]
-#define f32VD16 f32VD1[6]
-#define f32VD17 f32VD1[7]
+#define f32VD10 f32VD[0]
+#define f32VD11 f32VD[1]
+#define f32VD12 f32VD[2]
+#define f32VD13 f32VD[3]
+#define f32VD14 f32VD[4]
+#define f32VD15 f32VD[5]
+#define f32VD16 f32VD[6]
+#define f32VD17 f32VD[7]
 
 
 /* Define Input Pin */

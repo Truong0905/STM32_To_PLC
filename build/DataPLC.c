@@ -38,7 +38,7 @@ void PLC_Main_Task(void *param)
 		/*--------------NetWork 2 -----------*/
 
 		if ((M0_0))
-			(memcpy(&u16VW1, &AIW0, 2));
+			(memcpy((uint8_t *)&u16VW1, (uint8_t *)&AIW0, 2));
 		M1_1 = (M0_0);
 		if (M1_1 > 0)
 		{
@@ -59,11 +59,11 @@ void PLC_Main_Task(void *param)
 		/*--------------NetWork 5 -----------*/
 
 		if ((M0_0))
-			f32VD10 = f32VD10 / 4096.0;
+			f32VD10 = f32VD10 * 100.0;
 		/*--------------NetWork 6 -----------*/
 
 		if ((M0_0))
-			f32VD10 = f32VD10 * 100.0;
+			f32VD10 = f32VD10 / 4096.0;
 		/*--------------NetWork 7 -----------*/
 
 		volatile uint8_t u8Compare0 = 0;

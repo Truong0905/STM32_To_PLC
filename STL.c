@@ -298,7 +298,7 @@ static void DefineRegionMemory(FILE *pFile, int memoryRegion, int sumOfmem)
     else if (memoryRegion == f32_VD_MEM)
     {
         fprintf(pFile, "\n\n/*  Define float VD */\n");
-        strcpy(check, "f32VD1");
+        strcpy(check, "f32VD");
     }
 
     for (int x = 0; x < sumOfmem; x++)
@@ -321,6 +321,10 @@ static void DefineRegionMemory(FILE *pFile, int memoryRegion, int sumOfmem)
             {
                 fprintf(pFile, "#define %sW%d %s[%d]\n", check, i, check,i);
 
+            }
+            else if (memoryRegion == f32_VD_MEM)
+            {
+                fprintf(pFile, "#define %s1%d %s[%d]\n", check, i, check, i);
             }
             else
             {
@@ -479,7 +483,7 @@ static void InsertMov(LinkList *(*pMain), char *OutString, int CountQuestionMark
                 (*pMain)->data = MS_StrAllocAndAppend("u32",temp->data);
             }
 
-            fprintf(pFile, " (memcpy(&%s,&%s,%d)) ;\n", temp->data, (*pMain)->data, check);
+            fprintf(pFile, " (memcpy((uint8_t *)&%s,(uint8_t *)&%s,%d)) ;\n", temp->data, (*pMain)->data, check);
             L_DeleteLinkList(&(*pMain), &((*pMain)->prev), &((*pMain)->next));
             L_DeleteLinkList(&temp, &(temp->prev), &(temp->next));
             (*pMain) = pNext->next;
@@ -489,7 +493,7 @@ static void InsertMov(LinkList *(*pMain), char *OutString, int CountQuestionMark
         {
             OutString = MS_AddParenthesesIfMissing(OutString);
             fprintf(pFile, "if(%s)\n ", OutString);
-            fprintf(pFile, " (memcpy(&%s,&%s,1)) ; \n", temp->data, (*pMain)->data);
+            fprintf(pFile, " (memcpy((uint8_t *)&%s,(uint8_t *)&%s,1)) ; \n", temp->data, (*pMain)->data);
             L_DeleteLinkList(&(*pMain), &((*pMain)->prev), &((*pMain)->next));
             L_DeleteLinkList(&temp, &(temp->prev), &(temp->next));
             (*pMain) = pNext;
@@ -500,7 +504,7 @@ static void InsertMov(LinkList *(*pMain), char *OutString, int CountQuestionMark
     {
         OutString = MS_AddParenthesesIfMissing(OutString);
         fprintf(pFile, "if(%s)\n ", OutString);
-        fprintf(pFile, " (memcpy(&%s,&%s,1)) ; \n", temp->data, (*pMain)->data);
+        fprintf(pFile, " (memcpy((uint8_t *)&%s,(uint8_t *)&%s,1)) ; \n", temp->data, (*pMain)->data);
     }
 }
 

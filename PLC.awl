@@ -19,13 +19,13 @@ ITD    VW1, VD0
 Network 4 
 LD     M0.0
 DTR    VD0, VD10
-Network 5 
-LD     M0.0
-/R     4096.0, VD10
-Network 6
+Network 5
 LD     M0.0
 *R     100.0, VD10
-Network 7 
+Network 6
+LD     M0.0
+/R     4096.0, VD10
+Network 7
 LD     M0.0
 AR>=   VD10, 50.0
 =      Q0.0
